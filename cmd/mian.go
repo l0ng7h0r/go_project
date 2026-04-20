@@ -22,36 +22,33 @@ func main() {
 	}
 
 	// --- Repositories ---
-	userRepo := repository.NewUserRepository(db)
-	sellerRepo := repository.NewSellerRepository(db)
-	productRepo := repository.NewProductRepository(db)
+	userRepo     := repository.NewUserRepository(db)
+	sellerRepo   := repository.NewSellerRepository(db)
+	productRepo  := repository.NewProductRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
-	addressRepo := repository.NewAddressRepository(db)
-	cartRepo := repository.NewCartRepository(db)
-	orderRepo := repository.NewOrderRepository(db)
-	paymentRepo := repository.NewPaymentRepository(db)
+	cartRepo     := repository.NewCartRepository(db)
+	orderRepo    := repository.NewOrderRepository(db)
+	paymentRepo  := repository.NewPaymentRepository(db)
 	shipmentRepo := repository.NewShipmentRepository(db)
 
 	// --- Usecases ---
-	authUsecase := usecase.NewAuthUsecase(userRepo)
-	sellerUsecase := usecase.NewSellerUsecase(sellerRepo, userRepo)
-	productUsecase := usecase.NewProductUsecase(productRepo, categoryRepo)
+	authUsecase     := usecase.NewAuthUsecase(userRepo)
+	sellerUsecase   := usecase.NewSellerUsecase(sellerRepo, userRepo)
+	productUsecase  := usecase.NewProductUsecase(productRepo, categoryRepo)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
-	addressUsecase := usecase.NewAddressUsecase(addressRepo)
-	cartUsecase := usecase.NewCartUsecase(cartRepo, productRepo)
-	orderUsecase := usecase.NewOrderUsecase(orderRepo, cartRepo, productRepo)
-	paymentUsecase := usecase.NewPaymentUsecase(paymentRepo, orderRepo)
+	cartUsecase     := usecase.NewCartUsecase(cartRepo, productRepo)
+	orderUsecase    := usecase.NewOrderUsecase(orderRepo, cartRepo, productRepo)
+	paymentUsecase  := usecase.NewPaymentUsecase(paymentRepo, orderRepo)
 	shipmentUsecase := usecase.NewShipmentUsecase(shipmentRepo)
 
 	// --- Handlers ---
-	authHandler := handler.NewAuthHandler(authUsecase)
-	sellerHandler := handler.NewSellerHandler(sellerUsecase)
-	productHandler := handler.NewProductHandler(productUsecase, sellerUsecase)
+	authHandler     := handler.NewAuthHandler(authUsecase)
+	sellerHandler   := handler.NewSellerHandler(sellerUsecase)
+	productHandler  := handler.NewProductHandler(productUsecase, sellerUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
-	addressHandler := handler.NewAddressHandler(addressUsecase)
-	cartHandler := handler.NewCartHandler(cartUsecase)
-	orderHandler := handler.NewOrderHandler(orderUsecase)
-	paymentHandler := handler.NewPaymentHandler(paymentUsecase)
+	cartHandler     := handler.NewCartHandler(cartUsecase)
+	orderHandler    := handler.NewOrderHandler(orderUsecase)
+	paymentHandler  := handler.NewPaymentHandler(paymentUsecase)
 	shipmentHandler := handler.NewShipmentHandler(shipmentUsecase)
 
 	// --- Middleware ---
@@ -60,7 +57,7 @@ func main() {
 	app := fiber.New()
 	api := app.Group("/api")
 
-	// Public routes
+	// ── Public routes ─────────────────────────────────────────────────────────
 	api.Post("/register", authHandler.Register)
 	api.Post("/login", authHandler.Login)
 	api.Post("/refresh", authHandler.Refresh)
@@ -72,37 +69,30 @@ func main() {
 	api.Get("/categories", categoryHandler.GetAllCategories)
 	api.Get("/categories/:id", categoryHandler.GetCategoryByID)
 
-	// Authenticated user routes
+	// ── Authenticated user routes ──────────────────────────────────────────────
 	user := api.Group("/user")
 	user.Use(authMiddleware.Auth)
 
-	// Address routes
-	user.Get("/addresses", addressHandler.GetMyAddresses)
-	user.Post("/addresses", addressHandler.CreateAddress)
-	user.Put("/addresses/:id", addressHandler.UpdateAddress)
-	user.Delete("/addresses/:id", addressHandler.DeleteAddress)
-	user.Patch("/addresses/:id/default", addressHandler.SetDefaultAddress)
-
-	// Cart routes
+	// Cart
 	user.Get("/cart", cartHandler.GetCart)
 	user.Post("/cart/items", cartHandler.AddItem)
 	user.Put("/cart/items", cartHandler.UpdateItem)
 	user.Delete("/cart/items/:productId", cartHandler.RemoveItem)
 	user.Delete("/cart", cartHandler.ClearCart)
 
-	// Order routes (user)
+	// Orders
 	user.Post("/orders", orderHandler.CreateOrder)
 	user.Get("/orders", orderHandler.GetMyOrders)
 	user.Get("/orders/:id", orderHandler.GetOrderByID)
 
-	// Payment routes (user)
+	// Payments
 	user.Post("/payments", paymentHandler.CreatePayment)
 	user.Get("/payments/order/:orderId", paymentHandler.GetPaymentByOrder)
 
-	// Shipment routes (user tracking)
+	// Shipment tracking
 	user.Get("/shipments/order/:orderId", shipmentHandler.GetShipmentByOrder)
 
-	// Seller routes
+	// ── Seller routes ──────────────────────────────────────────────────────────
 	seller := api.Group("/seller")
 	seller.Use(authMiddleware.Auth)
 	seller.Use(authMiddleware.RequireRole("seller"))
@@ -111,7 +101,7 @@ func main() {
 	seller.Put("/products/:id", productHandler.UpdateProduct)
 	seller.Delete("/products/:id", productHandler.DeleteProduct)
 
-	// Admin routes
+	// ── Admin routes ───────────────────────────────────────────────────────────
 	admin := api.Group("/admin")
 	admin.Use(authMiddleware.Auth)
 	admin.Use(authMiddleware.RequireRole("admin"))

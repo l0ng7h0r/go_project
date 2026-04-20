@@ -20,19 +20,36 @@ func (h *OrderHandler) CreateOrder(c fiber.Ctx) error {
 	}
 
 	var req struct {
-		AddressText  string `json:"address_text"`
-		ReceiverName string `json:"receiver_name"`
-		Phone        string `json:"phone"`
+		ReceiverName   string `json:"receiver_name"`
+		Phone          string `json:"phone"`
+		Province       string `json:"province"`
+		District       string `json:"district"`
+		Logistic       string `json:"logistic"`
+		LogisticBranch string `json:"logistic_branch"`
 	}
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	orderID, err := h.orderUsecase.CreateOrderFromCart(userID, req.AddressText, req.ReceiverName, req.Phone)
+	if req.ReceiverName == "" || req.Phone == "" || req.Province == "" || req.District == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "receiver_name, phone, province and district are required",
+		})
+	}
+
+	orderID, err := h.orderUsecase.CreateOrderFromCart(
+		userID,
+		req.ReceiverName, req.Phone,
+		req.Province, req.District,
+		req.Logistic, req.LogisticBranch,
+	)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"order_id": orderID, "message": "Order created successfully"})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"order_id": orderID,
+		"message":  "Order created successfully",
+	})
 }
 
 func (h *OrderHandler) GetMyOrders(c fiber.Ctx) error {

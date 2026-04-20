@@ -23,9 +23,12 @@ func (r *OrderRepository) CreateOrder(order *domain.Order) (string, error) {
 
 	var orderID string
 	err = tx.QueryRow(
-		`INSERT INTO orders(user_id, total_price, status, address_text, receiver_name, phone)
-		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-		order.UserID, order.TotalPrice, order.Status, order.AddressText, order.ReceiverName, order.Phone,
+		`INSERT INTO orders(user_id, total_price, status, receiver_name, phone, province, district, logistic, logistic_branch)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+		order.UserID, order.TotalPrice, order.Status,
+		order.ReceiverName, order.Phone,
+		order.Province, order.District,
+		order.Logistic, order.LogisticBranch,
 	).Scan(&orderID)
 	if err != nil {
 		return "", err
@@ -46,19 +49,22 @@ func (r *OrderRepository) CreateOrder(order *domain.Order) (string, error) {
 
 func (r *OrderRepository) GetOrderByID(id string) (*domain.Order, error) {
 	row := r.db.QueryRow(
-		`SELECT id, user_id, total_price, status, address_text, receiver_name, phone, created_at, updated_at
+		`SELECT id, user_id, total_price, status, receiver_name, phone,
+		        province, district, logistic, logistic_branch, created_at, updated_at
 		 FROM orders WHERE id=$1`, id,
 	)
 	var o domain.Order
 	err := row.Scan(
-		&o.ID, &o.UserID, &o.TotalPrice, &o.Status, &o.AddressText,
-		&o.ReceiverName, &o.Phone, &o.CreatedAt, &o.UpdatedAt,
+		&o.ID, &o.UserID, &o.TotalPrice, &o.Status,
+		&o.ReceiverName, &o.Phone,
+		&o.Province, &o.District,
+		&o.Logistic, &o.LogisticBranch,
+		&o.CreatedAt, &o.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Load order items
 	items, err := r.GetOrderItems(id)
 	if err != nil {
 		return nil, err
@@ -88,7 +94,8 @@ func (r *OrderRepository) GetOrderItems(orderID string) ([]domain.OrderItem, err
 
 func (r *OrderRepository) GetOrdersByUserID(userID string) ([]domain.Order, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, total_price, status, address_text, receiver_name, phone, created_at, updated_at
+		`SELECT id, user_id, total_price, status, receiver_name, phone,
+		        province, district, logistic, logistic_branch, created_at, updated_at
 		 FROM orders WHERE user_id=$1 ORDER BY created_at DESC`, userID,
 	)
 	if err != nil {
@@ -99,8 +106,11 @@ func (r *OrderRepository) GetOrdersByUserID(userID string) ([]domain.Order, erro
 	for rows.Next() {
 		var o domain.Order
 		if err := rows.Scan(
-			&o.ID, &o.UserID, &o.TotalPrice, &o.Status, &o.AddressText,
-			&o.ReceiverName, &o.Phone, &o.CreatedAt, &o.UpdatedAt,
+			&o.ID, &o.UserID, &o.TotalPrice, &o.Status,
+			&o.ReceiverName, &o.Phone,
+			&o.Province, &o.District,
+			&o.Logistic, &o.LogisticBranch,
+			&o.CreatedAt, &o.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -125,7 +135,8 @@ func (r *OrderRepository) UpdateOrderStatus(id string, status string) error {
 
 func (r *OrderRepository) GetAllOrders() ([]domain.Order, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, total_price, status, address_text, receiver_name, phone, created_at, updated_at
+		`SELECT id, user_id, total_price, status, receiver_name, phone,
+		        province, district, logistic, logistic_branch, created_at, updated_at
 		 FROM orders ORDER BY created_at DESC`,
 	)
 	if err != nil {
@@ -136,8 +147,11 @@ func (r *OrderRepository) GetAllOrders() ([]domain.Order, error) {
 	for rows.Next() {
 		var o domain.Order
 		if err := rows.Scan(
-			&o.ID, &o.UserID, &o.TotalPrice, &o.Status, &o.AddressText,
-			&o.ReceiverName, &o.Phone, &o.CreatedAt, &o.UpdatedAt,
+			&o.ID, &o.UserID, &o.TotalPrice, &o.Status,
+			&o.ReceiverName, &o.Phone,
+			&o.Province, &o.District,
+			&o.Logistic, &o.LogisticBranch,
+			&o.CreatedAt, &o.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

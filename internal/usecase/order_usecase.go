@@ -18,7 +18,9 @@ func NewOrderUsecase(orderRepo *repository.OrderRepository, cartRepo *repository
 }
 
 // CreateOrderFromCart creates an order from the user's cart and clears the cart
-func (u *OrderUsecase) CreateOrderFromCart(userID, addressText, receiverName, phone string) (string, error) {
+func (u *OrderUsecase) CreateOrderFromCart(
+	userID, receiverName, phone, province, district, logistic, logisticBranch string,
+) (string, error) {
 	cart, err := u.cartRepo.GetOrCreateCart(userID)
 	if err != nil {
 		return "", err
@@ -38,8 +40,7 @@ func (u *OrderUsecase) CreateOrderFromCart(userID, addressText, receiverName, ph
 		if product.Stock < item.Quantity {
 			return "", errors.New("insufficient stock for product: " + product.Name)
 		}
-		itemTotal := product.Price * float64(item.Quantity)
-		totalPrice += itemTotal
+		totalPrice += product.Price * float64(item.Quantity)
 		orderItems = append(orderItems, domain.OrderItem{
 			ProductID: item.ProductID,
 			Quantity:  item.Quantity,
@@ -48,13 +49,16 @@ func (u *OrderUsecase) CreateOrderFromCart(userID, addressText, receiverName, ph
 	}
 
 	order := &domain.Order{
-		UserID:       userID,
-		TotalPrice:   totalPrice,
-		Status:       "pending",
-		AddressText:  addressText,
-		ReceiverName: receiverName,
-		Phone:        phone,
-		OrderItems:   orderItems,
+		UserID:         userID,
+		TotalPrice:     totalPrice,
+		Status:         "pending",
+		ReceiverName:   receiverName,
+		Phone:          phone,
+		Province:       province,
+		District:       district,
+		Logistic:       logistic,
+		LogisticBranch: logisticBranch,
+		OrderItems:     orderItems,
 	}
 
 	orderID, err := u.orderRepo.CreateOrder(order)
