@@ -64,8 +64,9 @@ func main() {
 
 	// Public product/category browsing
 	api.Get("/products", productHandler.GetAllProducts)
-	api.Get("/products/:id", productHandler.GetProductByID)
+	api.Get("/products/category/:id", productHandler.GetProductsByCategory)
 	api.Get("/products/seller/:id", productHandler.GetProductsBySeller)
+	api.Get("/products/:id", productHandler.GetProductByID)
 	api.Get("/categories", categoryHandler.GetAllCategories)
 	api.Get("/categories/:id", categoryHandler.GetCategoryByID)
 
@@ -97,9 +98,9 @@ func main() {
 	seller.Use(authMiddleware.Auth)
 	seller.Use(authMiddleware.RequireRole("seller"))
 
-	seller.Post("/products", productHandler.CreateProduct)
-	seller.Put("/products/:id", productHandler.UpdateProduct)
-	seller.Delete("/products/:id", productHandler.DeleteProduct)
+	seller.Post("/products/create", productHandler.CreateProduct)
+	seller.Put("/products/update/:id", productHandler.UpdateProduct)
+	seller.Delete("/products/delete/:id", productHandler.DeleteProduct)
 
 	// ── Admin routes ───────────────────────────────────────────────────────────
 	admin := api.Group("/admin")
@@ -120,9 +121,9 @@ func main() {
 	admin.Put("/sellers/:id", sellerHandler.UpdateSeller)
 
 	// Category management
-	admin.Post("/categories", categoryHandler.CreateCategory)
-	admin.Put("/categories/:id", categoryHandler.UpdateCategory)
-	admin.Delete("/categories/:id", categoryHandler.DeleteCategory)
+	admin.Post("/categories/create", categoryHandler.CreateCategory)
+	admin.Put("/categories/update/:id", categoryHandler.UpdateCategory)
+	admin.Delete("/categories/delete/:id", categoryHandler.DeleteCategory)
 
 	// Order management
 	admin.Get("/orders", orderHandler.GetAllOrders)
@@ -132,7 +133,7 @@ func main() {
 	admin.Patch("/payments/:id/confirm", paymentHandler.ConfirmPayment)
 
 	// Shipment management
-	admin.Post("/shipments", shipmentHandler.CreateShipment)
+	admin.Post("/shipments/create", shipmentHandler.CreateShipment)
 	admin.Patch("/shipments/:id/status", shipmentHandler.UpdateStatus)
 	admin.Patch("/shipments/:id/tracking", shipmentHandler.UpdateTracking)
 

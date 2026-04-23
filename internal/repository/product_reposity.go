@@ -137,3 +137,26 @@ func (r *ProductRepository) UpdateProduct(id string, product *domain.Product) er
 	}
 	return nil
 }
+
+func (r *ProductRepository) GetProductsByCategoryID(categoryID string) ([]domain.Product, error) {
+	rows, err := r.db.Query(
+		`SELECT p.id, p.seller_id, p.name, p.description, p.price, p.stock, p.status, p.created_at, p.updated_at
+		 FROM products p
+		 INNER JOIN product_categories pc ON pc.product_id = p.id
+		 WHERE pc.category_id = $1
+		 ORDER BY p.created_at DESC`, categoryID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var products []domain.Product
+	for rows.Next() {
+		var p domain.Product
+		if err := rows.Scan(&p.ID, &p.SellerID, &p.Name, &p.Description, &p.Price, &p.Stock, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+	return products, nil
+}

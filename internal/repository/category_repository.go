@@ -17,18 +17,18 @@ func NewCategoryRepository(db *sql.DB) *CategoryRepository {
 func (r *CategoryRepository) CreateCategory(category *domain.Category) (string, error) {
 	var id string
 	err := r.db.QueryRow(
-		`INSERT INTO categories(name, parent_id) VALUES ($1, $2) RETURNING id`,
-		category.Name, category.ParentID,
+		`INSERT INTO categories(name) VALUES ($1) RETURNING id`,
+		category.Name,
 	).Scan(&id)
 	return id, err
 }
 
 func (r *CategoryRepository) GetCategoryByID(id string) (*domain.Category, error) {
 	row := r.db.QueryRow(
-		`SELECT id, name, parent_id, created_at FROM categories WHERE id=$1`, id,
+		`SELECT id, name, created_at FROM categories WHERE id=$1`, id,
 	)
 	var c domain.Category
-	err := row.Scan(&c.ID, &c.Name, &c.ParentID, &c.CreatedAt)
+	err := row.Scan(&c.ID, &c.Name, &c.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r *CategoryRepository) GetCategoryByID(id string) (*domain.Category, error
 
 func (r *CategoryRepository) GetAllCategories() ([]domain.Category, error) {
 	rows, err := r.db.Query(
-		`SELECT id, name, parent_id, created_at FROM categories ORDER BY name`,
+		`SELECT id, name, created_at FROM categories ORDER BY name`,
 	)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (r *CategoryRepository) GetAllCategories() ([]domain.Category, error) {
 	var categories []domain.Category
 	for rows.Next() {
 		var c domain.Category
-		if err := rows.Scan(&c.ID, &c.Name, &c.ParentID, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.CreatedAt); err != nil {
 			return nil, err
 		}
 		categories = append(categories, c)
@@ -56,8 +56,8 @@ func (r *CategoryRepository) GetAllCategories() ([]domain.Category, error) {
 
 func (r *CategoryRepository) UpdateCategory(id string, category *domain.Category) error {
 	res, err := r.db.Exec(
-		`UPDATE categories SET name=$1, parent_id=$2 WHERE id=$3`,
-		category.Name, category.ParentID, id,
+		`UPDATE categories SET name=$1 WHERE id=$2`,
+		category.Name, id,
 	)
 	if err != nil {
 		return err

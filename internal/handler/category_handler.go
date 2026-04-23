@@ -15,14 +15,16 @@ func NewCategoryHandler(categoryUsecase *usecase.CategoryUsecase) *CategoryHandl
 
 func (h *CategoryHandler) CreateCategory(c fiber.Ctx) error {
 	var req struct {
-		Name     string  `json:"name"`
-		ParentID *string `json:"parent_id"`
+		Name string `json:"name"`
 	}
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+	if req.Name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name is required"})
+	}
 
-	id, err := h.categoryUsecase.CreateCategory(req.Name, req.ParentID)
+	id, err := h.categoryUsecase.CreateCategory(req.Name)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -49,13 +51,12 @@ func (h *CategoryHandler) GetCategoryByID(c fiber.Ctx) error {
 func (h *CategoryHandler) UpdateCategory(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req struct {
-		Name     string  `json:"name"`
-		ParentID *string `json:"parent_id"`
+		Name string `json:"name"`
 	}
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	if err := h.categoryUsecase.UpdateCategory(id, req.Name, req.ParentID); err != nil {
+	if err := h.categoryUsecase.UpdateCategory(id, req.Name); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"message": "Category updated successfully"})

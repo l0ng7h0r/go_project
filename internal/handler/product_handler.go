@@ -114,3 +114,15 @@ func (h *ProductHandler) UpdateProduct(c fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "Product updated successfully"})
 }
+
+func (h *ProductHandler) GetProductsByCategory(c fiber.Ctx) error {
+	categoryID := c.Params("id")
+	products, err := h.productUsecase.GetProductsByCategory(categoryID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if products == nil {
+		products = []domain.Product{}
+	}
+	return c.JSON(products)
+}

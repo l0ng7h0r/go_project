@@ -65,3 +65,7 @@ func (u *ProductUsecase) DeleteProduct(id string, sellerID string) error {
 func (u *ProductUsecase) UpdateProduct(id string, product *domain.Product) error {
 	return u.productRepo.UpdateProduct(id, product)
 }
+
+func (u *ProductUsecase) GetProductsByCategory(categoryID string) ([]domain.Product, error) {
+	return u.productRepo.GetProductsByCategoryID(categoryID)
+}
