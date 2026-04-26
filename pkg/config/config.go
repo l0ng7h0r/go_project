@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	DBDsn string
-	JWTSecret string
-	JWTAccessExpiry string
+	DBDsn            string
+	JWTSecret        string
+	JWTAccessExpiry  string
 	JWTRefreshExpiry string
-	AppPort string
+	AppPort          string
+	PhajaySecretKey  string
 }
 
 var cfg *Config
@@ -33,11 +34,12 @@ func Load() *Config{
 	_ = godotenv.Load()
 
 	cfg = &Config{
-		DBDsn: getEnv("DB_DSN"),
-		JWTSecret: getEnv("JWT_SECRET"),
+		DBDsn:           getEnv("DB_DSN"),
+		JWTSecret:       getEnv("JWT_SECRET"),
 		JWTAccessExpiry: getEnv("JWT_ACCESS_EXPIRY"),
-		JWTRefreshExpiry: getEnv("JWT_REFRESH_EXPIRY"),
-		AppPort: getEnv("APP_PORT"),
+		JWTRefreshExpiry:getEnv("JWT_REFRESH_EXPIRY"),
+		AppPort:         getEnv("APP_PORT"),
+		PhajaySecretKey: os.Getenv("PHAJAY_SECRET_KEY"),
 	}
 
 	return cfg

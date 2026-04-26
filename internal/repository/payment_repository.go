@@ -17,23 +17,39 @@ func NewPaymentRepository(db *sql.DB) *PaymentRepository {
 func (r *PaymentRepository) CreatePayment(payment *domain.Payment) (string, error) {
 	var id string
 	err := r.db.QueryRow(
-		`INSERT INTO payments(order_id, method, status, amount, transaction_id, paid_at)
-		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		`INSERT INTO payments(order_id, method, status, amount, transaction_id, payment_url, paid_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 		payment.OrderID, payment.Method, payment.Status, payment.Amount,
-		payment.TransactionID, payment.PaidAt,
+		payment.TransactionID, payment.PaymentURL, payment.PaidAt,
 	).Scan(&id)
 	return id, err
 }
 
 func (r *PaymentRepository) GetPaymentByOrderID(orderID string) (*domain.Payment, error) {
 	row := r.db.QueryRow(
-		`SELECT id, order_id, method, status, amount, transaction_id, paid_at, created_at
+		`SELECT id, order_id, method, status, amount, transaction_id, payment_url, paid_at, created_at
 		 FROM payments WHERE order_id=$1`, orderID,
 	)
 	var p domain.Payment
 	err := row.Scan(
 		&p.ID, &p.OrderID, &p.Method, &p.Status, &p.Amount,
-		&p.TransactionID, &p.PaidAt, &p.CreatedAt,
+		&p.TransactionID, &p.PaymentURL, &p.PaidAt, &p.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (r *PaymentRepository) GetPaymentByID(id string) (*domain.Payment, error) {
+	row := r.db.QueryRow(
+		`SELECT id, order_id, method, status, amount, transaction_id, payment_url, paid_at, created_at
+		 FROM payments WHERE id=$1`, id,
+	)
+	var p domain.Payment
+	err := row.Scan(
+		&p.ID, &p.OrderID, &p.Method, &p.Status, &p.Amount,
+		&p.TransactionID, &p.PaymentURL, &p.PaidAt, &p.CreatedAt,
 	)
 	if err != nil {
 		return nil, err

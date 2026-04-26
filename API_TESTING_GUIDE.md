@@ -1,112 +1,67 @@
-# 📦 API Testing Guide — Go E-commerce (ລາວ)
+# API Testing Guide — Go E-commerce (ລາວ)
 
 **Base URL:** `http://localhost:3000/api`  
-**Content-Type:** `application/json`  
-**Authorization:** `Bearer <access_token>` (route ທີ່ຕ້ອງການ Auth)
+**Port:** `3000` (ตั้งใน .env)
 
 ---
 
-## 🔄 ຂັ້ນຕອນການ Test ແບບ Flow ສົມບູນ
+## 🔑 Auth Headers
 
-```
-1. Register / Login          →  ເກັບ access_token
-2. (Admin) ສ້າງ Category     →  ເກັບ category_id
-3. (Admin) ສ້າງ Seller       →  Login ດ້ວຍ seller account  →  ເກັບ seller_token
-4. (Seller) ສ້າງ Product     →  ເກັບ product_id
-5. (User) Add to Cart
-6. (User) Create Order       →  ໃສ່ຂໍ້ມູນຈັດສົ່ງ  →  ເກັບ order_id
-7. (User) Create Payment     →  ເກັບ payment_id
-8. (Admin) Confirm Payment
-9. (Admin) Update Order Status → confirmed
-10.(Admin) Create Shipment   →  ເກັບ shipment_id
-11.(Admin) Update Shipment   → shipped → delivered
-```
+| Route | Header |
+|-------|--------|
+| Public | ไม่ต้อง |
+| User | `Authorization: Bearer <access_token>` |
+| Seller | `Authorization: Bearer <seller_token>` (role: seller) |
+| Admin | `Authorization: Bearer <admin_token>` (role: admin) |
 
 ---
 
-## 🗂️ สรุป Route ทั้งหมด
+## 🔄 Full Test Flow
 
-| Method | Path | Auth | Role | ໜ້າທີ |
-|--------|------|------|------|--------|
-| POST | `/api/register` | ❌ | - | ສະໝັກສະມາຊິກ |
-| POST | `/api/login` | ❌ | - | ເຂົ້າສູ່ລະບົບ |
-| POST | `/api/refresh` | ❌ | - | ຕໍ່ Token |
-| GET | `/api/products` | ❌ | - | ດູສິນຄ້າທັງໝົດ |
-| GET | `/api/products/:id` | ❌ | - | ດູສິນຄ້າຕາມ ID |
-| GET | `/api/products/seller/:id` | ❌ | - | ດູສິນຄ້າຂອງ Seller |
-| GET | `/api/categories` | ❌ | - | ດູ Category ທັງໝົດ |
-| GET | `/api/categories/:id` | ❌ | - | ດູ Category ຕາມ ID |
-| GET | `/api/user/cart` | ✅ | user | ດູຕະກ້ານ |
-| POST | `/api/user/cart/items` | ✅ | user | ເພີ່ມສິນຄ້າ |
-| PUT | `/api/user/cart/items` | ✅ | user | ອັບເດດຈຳນວນ |
-| DELETE | `/api/user/cart/items/:productId` | ✅ | user | ລຶບສິນຄ້າ |
-| DELETE | `/api/user/cart` | ✅ | user | ລ້າງຕະກ້ານ |
-| POST | `/api/user/orders` | ✅ | user | ສ້າງ Order |
-| GET | `/api/user/orders` | ✅ | user | ດູ Order ຂອງຕົນ |
-| GET | `/api/user/orders/:id` | ✅ | user | ດູ Order ຕາມ ID |
-| POST | `/api/user/payments` | ✅ | user | ສ້າງ Payment |
-| GET | `/api/user/payments/order/:orderId` | ✅ | user | ດູ Payment ຂອງ Order |
-| GET | `/api/user/shipments/order/:orderId` | ✅ | user | ຕິດຕາມການຈັດສົ່ງ |
-| POST | `/api/seller/products` | ✅ | seller | ສ້າງສິນຄ້າ |
-| PUT | `/api/seller/products/:id` | ✅ | seller | ແກ້ໄຂສິນຄ້າ |
-| DELETE | `/api/seller/products/:id` | ✅ | seller | ລຶບສິນຄ້າ |
-| POST | `/api/admin/users` | ✅ | admin | ສ້າງ User |
-| GET | `/api/admin/users` | ✅ | admin | ດູ User ທັງໝົດ |
-| GET | `/api/admin/users/:id` | ✅ | admin | ດູ User ຕາມ ID |
-| DELETE | `/api/admin/users/:id` | ✅ | admin | ລຶບ User |
-| POST | `/api/admin/sellers` | ✅ | admin | ສ້າງ Seller |
-| GET | `/api/admin/sellers` | ✅ | admin | ດູ Seller ທັງໝົດ |
-| GET | `/api/admin/sellers/:id` | ✅ | admin | ດູ Seller ຕາມ ID |
-| PUT | `/api/admin/sellers/:id` | ✅ | admin | ອັບເດດ Seller |
-| DELETE | `/api/admin/sellers/:id` | ✅ | admin | ລຶບ Seller |
-| POST | `/api/admin/categories` | ✅ | admin | ສ້າງ Category |
-| PUT | `/api/admin/categories/:id` | ✅ | admin | ອັບເດດ Category |
-| DELETE | `/api/admin/categories/:id` | ✅ | admin | ລຶບ Category |
-| GET | `/api/admin/orders` | ✅ | admin | ດູ Order ທັງໝົດ |
-| PATCH | `/api/admin/orders/:id/status` | ✅ | admin | ອັບເດດ Order Status |
-| PATCH | `/api/admin/payments/:id/confirm` | ✅ | admin | ຢືນຢັນ Payment |
-| POST | `/api/admin/shipments` | ✅ | admin | ສ້າງ Shipment |
-| PATCH | `/api/admin/shipments/:id/status` | ✅ | admin | ອັບເດດ Shipment Status |
-| PATCH | `/api/admin/shipments/:id/tracking` | ✅ | admin | ອັບເດດ Tracking |
+```
+ 1. Register → Login → เก็บ token
+ 2. (Admin) สร้าง Category
+ 3. (Admin) สร้าง Seller account
+ 4. (Seller) Login → สร้าง Product
+ 5. (User) เพิ่มสินค้าเข้า Cart
+ 6. (User) Create Order → ใส่ข้อมูลจัดส่ง
+ 7. (User) Create Payment → ได้ Phajay payment_url
+ 8. ลูกค้าเปิด payment_url → scan QR จ่ายเงิน
+ 9. Phajay webhook callback → order confirmed อัตโนมัติ
+10. (Admin) สร้าง Shipment → อัปเดต tracking
+```
 
 ---
 
 ## 1. 🔑 Auth (Public)
 
-### POST /api/register — ສະໝັກສະມາຊິກໃໝ່
-
+### POST /api/register
 ```http
 POST http://localhost:3000/api/register
 Content-Type: application/json
 
 {
-  "email": "somchai@example.com",
+  "email": "user@example.com",
   "password": "secret123"
 }
 ```
-
-**Response 200:**
-```json
-{ "message": "User registered successfully" }
-```
+✅ `200` → `{ "message": "User registered successfully" }`
 
 ---
 
-### POST /api/login — ເຂົ້າສູ່ລະບົບ
-
-> ⭐ **ເກັບ `access_token` ເອົາໄວ້ໃຊ້ທຸກ request ທີ່ຕ້ອງການ Auth**
+### POST /api/login
+> ⭐ เก็บ `access_token` ไว้ใช้ทุก request
 
 ```http
 POST http://localhost:3000/api/login
 Content-Type: application/json
 
 {
-  "email": "somchai@example.com",
+  "email": "user@example.com",
   "password": "secret123"
 }
 ```
-
-**Response 200:**
+✅ `200`:
 ```json
 {
   "access_token": "eyJhbGci...",
@@ -116,8 +71,7 @@ Content-Type: application/json
 
 ---
 
-### POST /api/refresh — ຂໍ Token ໃໝ່
-
+### POST /api/refresh
 ```http
 POST http://localhost:3000/api/refresh
 Content-Type: application/json
@@ -126,188 +80,154 @@ Content-Type: application/json
   "refresh_token": "eyJhbGci..."
 }
 ```
+✅ `200` → token ชุดใหม่
 
-**Response 200:**
+---
+
+## 2. 🏷️ Categories (Public)
+
+### GET /api/categories
+```http
+GET http://localhost:3000/api/categories
+```
+✅ `200`:
 ```json
-{
-  "access_token": "eyJhbGci...(ໃໝ່)",
-  "refresh_token": "eyJhbGci...(ໃໝ່)"
-}
+[{ "id": "uuid", "name": "ອີເລັກໂຕຣນິກ", "created_at": "..." }]
 ```
 
 ---
 
-## 2. 🛍️ Products (Public — ບໍ່ຕ້ອງ Login)
+### GET /api/categories/:id
+```http
+GET http://localhost:3000/api/categories/<category_id>
+```
 
-### GET /api/products — ດູສິນຄ້າທັງໝົດ
+---
 
+## 3. 🛍️ Products (Public)
+
+### GET /api/products
 ```http
 GET http://localhost:3000/api/products
 ```
-
-**Response 200:**
+✅ `200`:
 ```json
 [
   {
     "id": "uuid",
     "seller_id": "uuid",
-    "name": "ໂທລະສັບ Samsung A55",
-    "description": "ສະມາດໂຟນ 6.4 ນິ້ວ RAM 8GB",
+    "name": "Samsung A55",
+    "description": "ສະມາດໂຟນ",
     "price": 3500000,
     "stock": 20,
     "status": "active",
     "images": [],
-    "categories": [],
-    "created_at": "2026-04-20T..."
+    "created_at": "..."
   }
 ]
 ```
 
 ---
 
-### GET /api/products/:id — ດູສິນຄ້າຕາມ ID
-
+### GET /api/products/:id
 ```http
-GET http://localhost:3000/api/products/550e8400-e29b-41d4-a716-446655440000
+GET http://localhost:3000/api/products/<product_id>
 ```
 
 ---
 
-### GET /api/products/seller/:id — ດູສິນຄ້າຂອງ Seller
-
+### GET /api/products/category/:id — ສິນຄ້າຕາມ Category
 ```http
-GET http://localhost:3000/api/products/seller/550e8400-e29b-41d4-a716-446655440000
+GET http://localhost:3000/api/products/category/<category_id>
+```
+✅ `200` → list ສິນຄ້າ (ถ้าไม่มี return `[]`)
+
+---
+
+### GET /api/products/seller/:id — ສິນຄ້າຂອງ Seller
+```http
+GET http://localhost:3000/api/products/seller/<seller_id>
 ```
 
 ---
 
-## 3. 🏷️ Categories (Public)
+## 4. 🛒 Cart (🔒 User Auth)
 
-### GET /api/categories — ດູ Category ທັງໝົດ
-
-```http
-GET http://localhost:3000/api/categories
-```
-
-**Response 200:**
-```json
-[
-  {
-    "id": "uuid",
-    "name": "ອີເລັກໂຕຣນິກ",
-    "parent_id": null,
-    "created_at": "2026-04-20T..."
-  }
-]
-```
-
----
-
-### GET /api/categories/:id — ດູ Category ຕາມ ID
-
-```http
-GET http://localhost:3000/api/categories/550e8400-e29b-41d4-a716-446655440000
-```
-
----
-
-## 4. 🛒 Cart (🔒 ຕ້ອງ Login)
-
-> Header ທຸກ Request: `Authorization: Bearer <access_token>`
-
-### GET /api/user/cart — ດູຕະກ້ານ
-
-> ສ້າງໃໝ່ອັດຕະໂນມັດຖ້າຍັງບໍ່ມີ
+### GET /api/user/cart
+> Cart ສ້າງອັດຕະໂນມັດຖ້າຍັງບໍ່ມີ
 
 ```http
 GET http://localhost:3000/api/user/cart
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 ```
-
-**Response 200:**
+✅ `200`:
 ```json
 {
   "id": "uuid",
   "user_id": "uuid",
   "items": [
-    {
-      "cart_id": "uuid",
-      "product_id": "uuid",
-      "quantity": 2
-    }
+    { "cart_id": "uuid", "product_id": "uuid", "quantity": 2 }
   ],
-  "created_at": "2026-04-20T..."
+  "created_at": "..."
 }
 ```
 
 ---
 
-### POST /api/user/cart/items — ເພີ່ມສິນຄ້າເຂົ້າຕະກ້ານ
-
-> ຖ້າສິນຄ້ານັ້ນມີຢູ່ແລ້ວໃນຕະກ້ານ ຈະບວກ quantity ໃຫ້ອັດຕະໂນມັດ
-
+### POST /api/user/cart/items — ເພີ່ມສິນຄ້າ
 ```http
 POST http://localhost:3000/api/user/cart/items
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "product_id": "550e8400-e29b-41d4-a716-446655440000",
+  "product_id": "<product_id>",
   "quantity": 2
 }
 ```
-
-**Response 200:**
-```json
-{ "message": "Item added to cart" }
-```
+✅ `200` → `{ "message": "Item added to cart" }`  
+❌ `400` → `product not found` | `quantity must be greater than zero`
 
 ---
 
-### PUT /api/user/cart/items — ອັບເດດຈຳນວນ
-
-> ໃສ່ `quantity: 0` ເພື່ອລຶບສິນຄ້ານັ້ນອອກ
-
+### PUT /api/user/cart/items — ອັບເດດ quantity
 ```http
 PUT http://localhost:3000/api/user/cart/items
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "product_id": "550e8400-e29b-41d4-a716-446655440000",
+  "product_id": "<product_id>",
   "quantity": 5
 }
 ```
 
 ---
 
-### DELETE /api/user/cart/items/:productId — ລຶບສິນຄ້າອອກຈາກຕະກ້ານ
-
+### DELETE /api/user/cart/items/:productId
 ```http
-DELETE http://localhost:3000/api/user/cart/items/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer eyJhbGci...
+DELETE http://localhost:3000/api/user/cart/items/<product_id>
+Authorization: Bearer <access_token>
 ```
 
 ---
 
-### DELETE /api/user/cart — ລ້າງຕະກ້ານທັງໝົດ
-
+### DELETE /api/user/cart — ລ້າງທັງໝົດ
 ```http
 DELETE http://localhost:3000/api/user/cart
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 ```
 
 ---
 
-## 5. 📋 Orders (🔒 ຕ້ອງ Login)
+## 5. 📋 Orders (🔒 User Auth)
 
-> ⚠️ **ຕ້ອງມີສິນຄ້າໃນຕະກ້ານກ່ອນ ຈຶ່ງ Order ໄດ້**
+> ⚠️ ຕ້ອງມີສິນຄ້າໃນຕະກ້ານກ່ອນ
 
-### POST /api/user/orders — ສ້າງ Order ຈາກ Cart
-
+### POST /api/user/orders — ສັ່ງຊື້
 ```http
 POST http://localhost:3000/api/user/orders
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
@@ -321,34 +241,30 @@ Content-Type: application/json
 ```
 
 | Field | Required | ຄວາມໝາຍ |
-|-------|----------|---------|
+|-------|:--------:|---------|
 | `receiver_name` | ✅ | ຊື່ຜູ້ຮັບ |
 | `phone` | ✅ | ເບີໂທ |
 | `province` | ✅ | ແຂວງ |
 | `district` | ✅ | ເມືອງ |
 | `logistic` | ❌ | ບໍລິສັດຂົນສົ່ງ (`ans`, `mpsl`, `ems`) |
-| `logistic_branch` | ❌ | ສາຂາຂົນສົ່ງ |
+| `logistic_branch` | ❌ | ສາຂາ |
 
-**Response 201:**
+✅ `201`:
 ```json
-{
-  "order_id": "uuid",
-  "message": "Order created successfully"
-}
+{ "order_id": "uuid", "message": "Order created successfully" }
 ```
+❌ `400` → `cart is empty` | `insufficient stock for product: xxx`
 
-> ⭐ ຫລັງ Order ສຳເລັດ ຕະກ້ານຈະຖືກລ້າງອັດຕະໂນມັດ
+> ⭐ ຕະກ້ານຈະຖືກລ້າງອັດຕະໂນມັດຫລັງ Order ສຳເລັດ
 
 ---
 
-### GET /api/user/orders — ດູ Order ຂອງຕົນເອງ
-
+### GET /api/user/orders
 ```http
 GET http://localhost:3000/api/user/orders
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 ```
-
-**Response 200:**
+✅ `200`:
 ```json
 [
   {
@@ -356,98 +272,135 @@ Authorization: Bearer eyJhbGci...
     "user_id": "uuid",
     "total_price": 7000000,
     "status": "pending",
-    "receiver_name":   "ສົມຊາຍ ໃຈດີ",
-    "phone":           "20 5555 6666",
-    "province":        "ໄຊຍະບູລີ",
-    "district":        "ປາກລາຍ",
-    "logistic":        "ans",
+    "receiver_name": "ສົມຊາຍ ໃຈດີ",
+    "phone": "20 5555 6666",
+    "province": "ໄຊຍະບູລີ",
+    "district": "ປາກລາຍ",
+    "logistic": "ans",
     "logistic_branch": "ສາຂາຫັດດາຍ",
     "order_items": [
-      {
-        "id": "uuid",
-        "order_id": "uuid",
-        "product_id": "uuid",
-        "quantity": 2,
-        "price": 3500000
-      }
+      { "id": "uuid", "product_id": "uuid", "quantity": 2, "price": 3500000 }
     ],
-    "created_at": "2026-04-20T...",
-    "updated_at": "2026-04-20T..."
+    "created_at": "...",
+    "updated_at": "..."
   }
 ]
 ```
 
 ---
 
-### GET /api/user/orders/:id — ດູ Order ຕາມ ID
-
+### GET /api/user/orders/:id
 ```http
-GET http://localhost:3000/api/user/orders/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer eyJhbGci...
+GET http://localhost:3000/api/user/orders/<order_id>
+Authorization: Bearer <access_token>
 ```
 
 ---
 
-## 6. 💳 Payments (🔒 ຕ້ອງ Login)
+## 6. 💳 Payments — Phajay (🔒 User Auth)
 
-### POST /api/user/payments — ສ້າງ Payment
+### POST /api/user/payments — ສ້າງ Payment (ໄດ້ Phajay Link ກັບ)
+
+> ⭐ ລະບົບຈະເອີ້ນ Phajay API ໃຫ້ອັດຕະໂນມັດ → return `payment_url` ໃຫ້ redirect ລູກຄ້າ
 
 ```http
 POST http://localhost:3000/api/user/payments
-Authorization: Bearer eyJhbGci...
+Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "order_id": "550e8400-e29b-41d4-a716-446655440000",
-  "method": "bank_transfer",
+  "order_id": "<order_id>",
   "amount": 7000000
 }
 ```
 
-| Field | ຄ່າທີ່ຮອງຮັບ |
-|-------|------------|
-| `method` | `bank_transfer` \| `bcel_one` \| `cash` |
+| Field | Required | ຄວາມໝາຍ |
+|-------|:--------:|---------|
+| `order_id` | ✅ | ID ຂອງ order ທີ່ຕ້ອງການຈ່າຍ |
+| `amount` | ✅ | ຈຳນວນເງິນ (ຕ້ອງ > 0) |
 
-**Response 201:**
+✅ `201`:
 ```json
-{ "payment_id": "uuid", "message": "Payment created" }
+{
+  "payment_id": "uuid",
+  "payment_url": "https://payment-gateway.phajay.co/pay/abc123",
+  "message": "Payment created — redirect customer to payment_url"
+}
 ```
+
+> **ຂັ້ນຕອນຕໍ່ໄປ:** Frontend ເອົາ `payment_url` ໄປເປີດໃຫ້ລູກຄ້າ → ລູກຄ້າ scan QR ຈ່າຍເງິນຜ່ານ BCEL/JDB/LDB
+
+❌ `400` → `order not found` | `order_id and amount are required`
 
 ---
 
 ### GET /api/user/payments/order/:orderId — ດູ Payment ຂອງ Order
-
 ```http
-GET http://localhost:3000/api/user/payments/order/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer eyJhbGci...
+GET http://localhost:3000/api/user/payments/order/<order_id>
+Authorization: Bearer <access_token>
 ```
-
-**Response 200:**
+✅ `200`:
 ```json
 {
   "id": "uuid",
   "order_id": "uuid",
-  "method": "bank_transfer",
+  "method": "phajay",
   "status": "pending",
   "amount": 7000000,
   "transaction_id": "",
+  "payment_url": "https://payment-gateway.phajay.co/pay/abc123",
   "paid_at": null,
-  "created_at": "2026-04-20T..."
+  "created_at": "..."
 }
+```
+
+**Payment Status Flow:**
+```
+pending → paid (ຈ່າຍສຳເລັດ)
+pending → failed (ຈ່າຍບໍ່ສຳເລັດ/ຍົກເລີກ)
 ```
 
 ---
 
-## 7. 🚚 Shipments — User (🔒 ຕ້ອງ Login)
+## 7. 🔔 Phajay Webhook (Public — Phajay ເອີ້ນ endpoint ນີ້)
 
-### GET /api/user/shipments/order/:orderId — ຕິດຕາມການຈັດສົ່ງ
+### POST /api/webhooks/phajay
+
+> ⚠️ Route ນີ້ Frontend ບໍ່ຕ້ອງເອີ້ນ — Phajay server ຈະ callback ມາອັດຕະໂນມັດ
 
 ```http
-GET http://localhost:3000/api/user/shipments/order/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer eyJhbGci...
+POST http://localhost:3000/api/webhooks/phajay
+Content-Type: application/json
+
+{
+  "orderNo": "<order_id>",
+  "transactionId": "TXN-20260424-001",
+  "amount": 7000000,
+  "status": "success"
+}
 ```
 
-**Response 200:**
+| Status | ຜົນ |
+|--------|-----|
+| `success` | payment → `paid`, order → `confirmed` (ອັດຕະໂນມັດ) |
+| `failed` | payment → `failed` |
+| `cancelled` | payment → `failed` |
+
+✅ `200` → `{ "message": "webhook processed" }`
+
+> ⭐ ຕ້ອງ config Webhook URL ໃນ [portal.phajay.co](https://portal.phajay.co) ໃຫ້ point ມາທີ່:  
+> `https://your-domain.com/api/webhooks/phajay`
+
+---
+
+## 8. 🚚 Shipments (🔒 User — ດູໄດ້)
+
+### GET /api/user/shipments/order/:orderId
+```http
+GET http://localhost:3000/api/user/shipments/order/<order_id>
+Authorization: Bearer <access_token>
+```
+✅ `200`:
 ```json
 {
   "id": "uuid",
@@ -455,67 +408,45 @@ Authorization: Bearer eyJhbGci...
   "provider": "ans",
   "tracking_number": "ANS123456789",
   "status": "shipped",
-  "shipped_at": "2026-04-20T...",
+  "shipped_at": "...",
   "delivered_at": null,
-  "created_at": "2026-04-20T..."
+  "created_at": "..."
 }
 ```
 
 ---
 
-## 8. 🏪 Seller Routes (🔒 Auth + Role: seller)
+## 9. 🏪 Seller (🔒 Auth + Role: seller)
 
-> Header ທຸກ Request: `Authorization: Bearer <seller_token>`
-
-### POST /api/seller/products — ສ້າງສິນຄ້າໃໝ່
-
+### POST /api/seller/products/create
 ```http
-POST http://localhost:3000/api/seller/products
+POST http://localhost:3000/api/seller/products/create
 Authorization: Bearer <seller_token>
 Content-Type: application/json
 
 {
-  "name": "ໂທລະສັບ Samsung A55",
-  "description": "ສະມາດໂຟນ 6.4 ນິ້ວ RAM 8GB",
+  "name": "Samsung A55",
+  "description": "ສະມາດໂຟນ 6.4 ນິ້ວ",
   "price": 3500000,
   "stock": 20,
   "status": "active",
-  "image_urls": [
-    "https://example.com/images/samsung-a55-1.jpg"
-  ],
-  "category_ids": [
-    "550e8400-e29b-41d4-a716-446655440000"
-  ]
+  "image_urls": ["https://example.com/img/samsung.jpg"],
+  "category_ids": ["<category_id>"]
 }
 ```
-
-| Field | Required | ຄວາມໝາຍ |
-|-------|----------|---------|
-| `name` | ✅ | ຊື່ສິນຄ້າ |
-| `description` | ❌ | ລາຍລະອຽດ |
-| `price` | ✅ | ລາຄາ (ກີບ) |
-| `stock` | ✅ | ຈຳນວນສິນຄ້າ |
-| `status` | ✅ | `active` \| `inactive` |
-| `image_urls` | ❌ | URL ຮູບສິນຄ້າ |
-| `category_ids` | ❌ | UUID ຂອງ Category |
-
-**Response 201:**
-```json
-{ "product_id": "uuid", "message": "Product created successfully" }
-```
+✅ `201` → `{ "product_id": "uuid", "message": "Product created successfully" }`
 
 ---
 
-### PUT /api/seller/products/:id — ແກ້ໄຂສິນຄ້າ
-
+### PUT /api/seller/products/update/:id
 ```http
-PUT http://localhost:3000/api/seller/products/550e8400-e29b-41d4-a716-446655440000
+PUT http://localhost:3000/api/seller/products/update/<product_id>
 Authorization: Bearer <seller_token>
 Content-Type: application/json
 
 {
-  "name": "ໂທລະສັບ Samsung A55 (Updated)",
-  "description": "ອັບເດດລາຍລະອຽດ",
+  "name": "Samsung A55 (Updated)",
+  "description": "ອັບເດດ",
   "price": 3200000,
   "stock": 15,
   "status": "active"
@@ -524,403 +455,247 @@ Content-Type: application/json
 
 ---
 
-### DELETE /api/seller/products/:id — ລຶບສິນຄ້າ
-
+### DELETE /api/seller/products/delete/:id
 ```http
-DELETE http://localhost:3000/api/seller/products/550e8400-e29b-41d4-a716-446655440000
+DELETE http://localhost:3000/api/seller/products/delete/<product_id>
 Authorization: Bearer <seller_token>
 ```
 
 ---
 
-## 9. 👑 Admin Routes (🔒 Auth + Role: admin)
+## 10. 👑 Admin (🔒 Auth + Role: admin)
 
-> Header ທຸກ Request: `Authorization: Bearer <admin_token>`
+### 👤 Users
 
----
-
-### 👤 User Management
-
-#### POST /api/admin/users — ສ້າງ User + ກຳນົດ Role
-
+#### POST /api/admin/users
 ```http
 POST http://localhost:3000/api/admin/users
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{
-  "email": "seller@example.com",
-  "password": "secret123",
-  "roles": ["seller"]
-}
+{ "email": "newseller@example.com", "password": "secret123", "roles": ["seller"] }
 ```
 
-**Roles ທີ່ໃຊ້ໄດ້:** `user` | `seller` | `admin`
-
----
-
-#### GET /api/admin/users — ດູ User ທັງໝົດ
-
+#### GET /api/admin/users
 ```http
 GET http://localhost:3000/api/admin/users
 Authorization: Bearer <admin_token>
 ```
 
----
-
-#### GET /api/admin/users/:id — ດູ User ຕາມ ID
-
+#### GET /api/admin/users/:id
 ```http
-GET http://localhost:3000/api/admin/users/550e8400-e29b-41d4-a716-446655440000
+GET http://localhost:3000/api/admin/users/<user_id>
+Authorization: Bearer <admin_token>
+```
+
+#### DELETE /api/admin/users/:id
+```http
+DELETE http://localhost:3000/api/admin/users/<user_id>
 Authorization: Bearer <admin_token>
 ```
 
 ---
 
-#### DELETE /api/admin/users/:id — ລຶບ User
+### 🏪 Sellers
 
-```http
-DELETE http://localhost:3000/api/admin/users/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer <admin_token>
-```
-
----
-
-### 🏪 Seller Management
-
-#### POST /api/admin/sellers — ສ້າງ Seller (User + Seller profile ພ້ອມກັນ)
-
+#### POST /api/admin/sellers
 ```http
 POST http://localhost:3000/api/admin/sellers
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
 {
-  "email": "myshop@example.com",
+  "email": "shop@example.com",
   "password": "secret123",
   "roles": ["seller"],
-  "store_name": "ຮ້ານ My Shop",
-  "description": "ຮ້ານຂາຍສິນຄ້າເອເລັກໂຕຣນິກ"
+  "store_name": "ຮ້ານ ABC",
+  "description": "ຮ້ານຂາຍເຄື່ອງໄຟຟ້າ"
 }
 ```
 
-**Response 201:**
-```json
-{ "seller_id": "uuid", "message": "Seller created successfully" }
-```
-
----
-
-#### GET /api/admin/sellers — ດູ Seller ທັງໝົດ
-
+#### GET /api/admin/sellers
 ```http
 GET http://localhost:3000/api/admin/sellers
 Authorization: Bearer <admin_token>
 ```
 
----
-
-#### GET /api/admin/sellers/:id — ດູ Seller ຕາມ ID
-
+#### GET /api/admin/sellers/:id
 ```http
-GET http://localhost:3000/api/admin/sellers/550e8400-e29b-41d4-a716-446655440000
+GET http://localhost:3000/api/admin/sellers/<seller_id>
 Authorization: Bearer <admin_token>
 ```
 
----
-
-#### PUT /api/admin/sellers/:id — ອັບເດດ Seller
-
+#### PUT /api/admin/sellers/:id
 ```http
-PUT http://localhost:3000/api/admin/sellers/550e8400-e29b-41d4-a716-446655440000
+PUT http://localhost:3000/api/admin/sellers/<seller_id>
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{
-  "store_name": "ຮ້ານ My Shop (ໃໝ່)",
-  "description": "ອັບເດດ"
-}
+{ "store_name": "ຮ້ານ ABC (ໃໝ່)", "description": "ອັບເດດ" }
 ```
 
----
-
-#### DELETE /api/admin/sellers/:id — ລຶບ Seller
-
+#### DELETE /api/admin/sellers/:id
 ```http
-DELETE http://localhost:3000/api/admin/sellers/550e8400-e29b-41d4-a716-446655440000
+DELETE http://localhost:3000/api/admin/sellers/<seller_id>
 Authorization: Bearer <admin_token>
 ```
 
 ---
 
-### 🏷️ Category Management
+### 🏷️ Categories
 
-#### POST /api/admin/categories — ສ້າງ Category ຫລັກ
-
+#### POST /api/admin/categories/create
 ```http
-POST http://localhost:3000/api/admin/categories
+POST http://localhost:3000/api/admin/categories/create
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{
-  "name": "ອີເລັກໂຕຣນິກ",
-  "parent_id": null
-}
+{ "name": "ອີເລັກໂຕຣນິກ" }
 ```
+✅ `201` → `{ "id": "uuid", "message": "Category created successfully" }`
 
-**Response 201:**
-```json
-{ "id": "uuid", "message": "Category created successfully" }
-```
-
----
-
-#### POST /api/admin/categories — ສ້າງ Sub-category
-
+#### PUT /api/admin/categories/update/:id
 ```http
-POST http://localhost:3000/api/admin/categories
+PUT http://localhost:3000/api/admin/categories/update/<category_id>
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{
-  "name": "ໂທລະສັບ",
-  "parent_id": "550e8400-e29b-41d4-a716-446655440000"
-}
+{ "name": "ອີເລັກໂຕຣນິກ (ໃໝ່)" }
 ```
 
----
-
-#### PUT /api/admin/categories/:id — ອັບເດດ Category
-
+#### DELETE /api/admin/categories/delete/:id
 ```http
-PUT http://localhost:3000/api/admin/categories/550e8400-e29b-41d4-a716-446655440000
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "name": "ອີເລັກໂຕຣນິກ & ກາດເຈັດ",
-  "parent_id": null
-}
-```
-
----
-
-#### DELETE /api/admin/categories/:id — ລຶບ Category
-
-```http
-DELETE http://localhost:3000/api/admin/categories/550e8400-e29b-41d4-a716-446655440000
+DELETE http://localhost:3000/api/admin/categories/delete/<category_id>
 Authorization: Bearer <admin_token>
 ```
 
 ---
 
-### 📋 Order Management
+### 📋 Orders
 
-#### GET /api/admin/orders — ດູ Order ທັງໝົດ
-
+#### GET /api/admin/orders
 ```http
 GET http://localhost:3000/api/admin/orders
 Authorization: Bearer <admin_token>
 ```
 
----
-
-#### PATCH /api/admin/orders/:id/status — ອັບເດດ Order Status
-
+#### PATCH /api/admin/orders/:id/status
 ```http
-PATCH http://localhost:3000/api/admin/orders/550e8400-e29b-41d4-a716-446655440000/status
+PATCH http://localhost:3000/api/admin/orders/<order_id>/status
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
 { "status": "confirmed" }
 ```
-
-**Status Flow:**
-
-```
-pending → confirmed → shipped → delivered
-                             ↘ cancelled
-```
-
-| Status | ຄວາມໝາຍ |
-|--------|---------|
-| `pending` | ລໍຖ້າ (ຄ່າເລີ່ມຕົ້ນ) |
-| `confirmed` | ຢືນຢັນ Order ແລ້ວ |
-| `shipped` | ສົ່ງສິນຄ້າແລ້ວ |
-| `delivered` | ສົ່ງຮອດແລ້ວ |
-| `cancelled` | ຍົກເລີກ |
+**Status flow:** `pending` → `confirmed` → `shipped` → `delivered` | `cancelled`
 
 ---
 
-### 💳 Payment Management
+### 💳 Payments (Admin — ยืนยัน manual)
 
-#### PATCH /api/admin/payments/:id/confirm — ຢືນຢັນ Payment
-
+#### PATCH /api/admin/payments/:id/confirm
 ```http
-PATCH http://localhost:3000/api/admin/payments/550e8400-e29b-41d4-a716-446655440000/confirm
+PATCH http://localhost:3000/api/admin/payments/<payment_id>/confirm
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{ "transaction_id": "TXN-20260420-001" }
+{ "transaction_id": "TXN-MANUAL-001" }
 ```
 
 ---
 
-### 🚚 Shipment Management
+### 🚚 Shipments
 
-#### POST /api/admin/shipments — ສ້າງ Shipment
-
+#### POST /api/admin/shipments/create
 ```http
-POST http://localhost:3000/api/admin/shipments
+POST http://localhost:3000/api/admin/shipments/create
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
 {
-  "order_id": "550e8400-e29b-41d4-a716-446655440000",
+  "order_id": "<order_id>",
   "provider": "ans",
   "tracking_number": "ANS123456789"
 }
 ```
 
-**Provider ທີ່ໃຊ້ໄດ້:** `ans` | `mpsl` | `ems`
-
----
-
-#### PATCH /api/admin/shipments/:id/status — ອັບເດດ Shipment Status
-
+#### PATCH /api/admin/shipments/:id/status
 ```http
-PATCH http://localhost:3000/api/admin/shipments/550e8400-e29b-41d4-a716-446655440000/status
+PATCH http://localhost:3000/api/admin/shipments/<shipment_id>/status
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
 { "status": "shipped" }
 ```
+**Status flow:** `pending` → `shipped` → `delivered`
 
-> ລະບົບ set `shipped_at` / `delivered_at` ອັດຕະໂນມັດ
-
----
-
-#### PATCH /api/admin/shipments/:id/tracking — ອັບເດດ Tracking Number
-
+#### PATCH /api/admin/shipments/:id/tracking
 ```http
-PATCH http://localhost:3000/api/admin/shipments/550e8400-e29b-41d4-a716-446655440000/tracking
+PATCH http://localhost:3000/api/admin/shipments/<shipment_id>/tracking
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
-{
-  "provider": "mpsl",
-  "tracking_number": "MPSL987654321"
-}
+{ "provider": "mpsl", "tracking_number": "MPSL987654321" }
 ```
 
 ---
 
 ## 📊 HTTP Status Codes
 
-| Status | ຄວາມໝາຍ |
-|--------|---------|
+| Code | ຄວາມໝາຍ |
+|------|---------|
 | `200` | ສຳເລັດ |
-| `201` | ສ້າງຂໍ້ມູນສຳເລັດ |
-| `400` | ຂໍ້ມູນບໍ່ຖືກຕ້ອງ / ຂໍ້ມູນຂາດ |
-| `401` | ບໍ່ມີ Token / Token ໝົດອາຍຸ |
-| `403` | ບໍ່ມີສິດ (Role ບໍ່ຕົງ) |
+| `201` | ສ້າງສຳເລັດ |
+| `400` | ຂໍ້ມູນບໍ່ຖືກ / business logic error |
+| `401` | ບໍ່ມີ token / token ໝົດອາຍຸ |
+| `403` | Role ບໍ່ຕົງ |
 | `404` | ບໍ່ພົບຂໍ້ມູນ |
-| `500` | Server Error |
+| `500` | Server error |
 
 ---
 
-## 🧪 curl — Full Flow Example
+## ⚙️ Phajay Setup (ຕັ້ງຄ່າ)
 
-```bash
-# ─── 1. Register ───────────────────────────────────────────────────
-curl -X POST http://localhost:3000/api/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"secret123"}'
-
-# ─── 2. Login & Save Token ─────────────────────────────────────────
-TOKEN=$(curl -s -X POST http://localhost:3000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"secret123"}' \
-  | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
-
-echo "TOKEN: $TOKEN"
-
-# ─── 3. ດູສິນຄ້າ ────────────────────────────────────────────────────
-curl http://localhost:3000/api/products
-
-# ─── 4. ເພີ່ມສິນຄ້າເຂົ້າຕະກ້ານ ──────────────────────────────────────
-curl -X POST http://localhost:3000/api/user/cart/items \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"product_id":"<product_uuid>","quantity":2}'
-
-# ─── 5. ສ້າງ Order ─────────────────────────────────────────────────
-ORDER=$(curl -s -X POST http://localhost:3000/api/user/orders \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "receiver_name": "ສົມຊາຍ ໃຈດີ",
-    "phone": "20 5555 6666",
-    "province": "ໄຊຍະບູລີ",
-    "district": "ປາກລາຍ",
-    "logistic": "ans",
-    "logistic_branch": "ສາຂາຫັດດາຍ"
-  }')
-echo "$ORDER"
-ORDER_ID=$(echo "$ORDER" | grep -o '"order_id":"[^"]*"' | cut -d'"' -f4)
-
-# ─── 6. ສ້າງ Payment ───────────────────────────────────────────────
-curl -X POST http://localhost:3000/api/user/payments \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d "{\"order_id\":\"$ORDER_ID\",\"method\":\"bank_transfer\",\"amount\":7000000}"
-```
+1. ສະໝັກບັນຊີທີ່ [portal.phajay.co](https://portal.phajay.co)
+2. ເອົາ **Secret Key** ມາໃສ່ `.env`:
+   ```
+   PHAJAY_SECRET_KEY=pk_live_xxxxxxxxxxxxxxxx
+   ```
+3. ຕັ້ງ **Webhook URL** ໃນ portal:
+   ```
+   https://your-domain.com/api/webhooks/phajay
+   ```
+4. ຕັ້ງ **Success URL** ແລະ **Cancel URL** ໃນ portal (ສຳລັບ redirect ຫລັງຈ່າຍ)
 
 ---
 
-## 🛠️ ການ Test ດ້ວຍ Postman
+## 🔄 Payment Flow Diagram
 
-### ຕັ້ງຄ່າ Environment Variables ໃນ Postman
-
-| Variable | Value |
-|----------|-------|
-| `base_url` | `http://localhost:3000/api` |
-| `access_token` | *(ໃສ່ຄ່າຫລັງ Login)* |
-| `admin_token` | *(ໃສ່ຄ່າຫລັງ Admin Login)* |
-| `seller_token` | *(ໃສ່ຄ່າຫລັງ Seller Login)* |
-| `product_id` | *(ໃສ່ຄ່າຫລັງສ້າງ Product)* |
-| `order_id` | *(ໃສ່ຄ່າຫລັງສ້າງ Order)* |
-| `payment_id` | *(ໃສ່ຄ່າຫລັງສ້າງ Payment)* |
-| `shipment_id` | *(ໃສ່ຄ່າຫລັງສ້າງ Shipment)* |
-
-### Auto-save Token (Postman Pre-request Script)
-
-ໃຊ້ script ນີ້ໃນ **Tests tab** ຂອງ Login request:
-
-```javascript
-const res = pm.response.json();
-if (res.access_token) {
-    pm.environment.set("access_token", res.access_token);
-    pm.environment.set("refresh_token", res.refresh_token);
-    console.log("✅ Token saved:", res.access_token.substring(0, 30) + "...");
-}
 ```
-
-### Authorization Header (ໃຊ້ Environment Variable)
-
-ໃນ Header ຂອງ Request ທີ່ຕ້ອງ Auth:
+ລູກຄ້າ                    Server                     Phajay
+  │                          │                          │
+  │  POST /user/payments     │                          │
+  │ {order_id, amount}       │                          │
+  │─────────────────────────▶│                          │
+  │                          │  POST /v1/api/link/      │
+  │                          │  payment-link             │
+  │                          │─────────────────────────▶│
+  │                          │                          │
+  │                          │  { paymentUrl: "..." }   │
+  │                          │◀─────────────────────────│
+  │                          │                          │
+  │  { payment_url: "..." }  │                          │
+  │◀─────────────────────────│                          │
+  │                          │                          │
+  │  ເປີດ payment_url        │                          │
+  │  scan QR ຈ່າຍເງິນ       │                          │
+  │─────────────────────────────────────────────────────▶│
+  │                          │                          │
+  │                          │  POST /webhooks/phajay   │
+  │                          │  {status: "success"}     │
+  │                          │◀─────────────────────────│
+  │                          │                          │
+  │                          │  payment→paid            │
+  │                          │  order→confirmed         │
+  │                          │                          │
 ```
-Authorization: Bearer {{access_token}}
-```
-
----
-
-## ⚠️ Common Errors
-
-| Error | ສາເຫດ | ວິທີແກ້ |
-|-------|-------|--------|
-| `401 Unauthorized` | Token ໝົດ / ບໍ່ມີ Token | Login ໃໝ່ ຫລື Refresh Token |
-| `403 Forbidden` | Role ບໍ່ຖືກຕ້ອງ | ໃຊ້ Token ທີ່ຖືກ Role |
-| `400 Bad Request` | ຂໍ້ມູນບໍ່ຄົບ / ຮູບແບບຜິດ | ກວດ Request Body |
-| `404 Not Found` | ບໍ່ພົບ ID ທີ່ລະບຸ | ກວດ UUID ທີ່ໃຊ້ |
-| `500 Internal Server Error` | Server/DB Error | ກວດ log ໃນ terminal |

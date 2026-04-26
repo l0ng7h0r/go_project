@@ -11,6 +11,7 @@ import (
 	"github.com/l0ng7h0r/golang/internal/usecase"
 	"github.com/l0ng7h0r/golang/pkg/config"
 	"github.com/l0ng7h0r/golang/pkg/database"
+	"github.com/l0ng7h0r/golang/pkg/phajay"
 )
 
 func main() {
@@ -20,6 +21,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// --- Phajay Payment Client ---
+	phajayClient := phajay.NewClient(cfg.PhajaySecretKey)
 
 	// --- Repositories ---
 	userRepo     := repository.NewUserRepository(db)
@@ -38,7 +42,7 @@ func main() {
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	cartUsecase     := usecase.NewCartUsecase(cartRepo, productRepo)
 	orderUsecase    := usecase.NewOrderUsecase(orderRepo, cartRepo, productRepo)
-	paymentUsecase  := usecase.NewPaymentUsecase(paymentRepo, orderRepo)
+	paymentUsecase  := usecase.NewPaymentUsecase(paymentRepo, orderRepo, phajayClient)
 	shipmentUsecase := usecase.NewShipmentUsecase(shipmentRepo)
 
 	// --- Handlers ---
@@ -69,6 +73,9 @@ func main() {
 	api.Get("/products/:id", productHandler.GetProductByID)
 	api.Get("/categories", categoryHandler.GetAllCategories)
 	api.Get("/categories/:id", categoryHandler.GetCategoryByID)
+
+	// Phajay webhook (public — Phajay server calls this)
+	api.Post("/webhooks/phajay", paymentHandler.PhajayWebhook)
 
 	// ── Authenticated user routes ──────────────────────────────────────────────
 	user := api.Group("/user")
@@ -129,7 +136,7 @@ func main() {
 	admin.Get("/orders", orderHandler.GetAllOrders)
 	admin.Patch("/orders/:id/status", orderHandler.UpdateOrderStatus)
 
-	// Payment management
+	// Payment management (manual confirm)
 	admin.Patch("/payments/:id/confirm", paymentHandler.ConfirmPayment)
 
 	// Shipment management
