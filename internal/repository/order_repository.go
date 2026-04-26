@@ -42,6 +42,15 @@ func (r *OrderRepository) CreateOrder(order *domain.Order) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		
+		// Deduct stock
+		_, err = tx.Exec(
+			`UPDATE products SET stock = stock - $1 WHERE id = $2`,
+			item.Quantity, item.ProductID,
+		)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return orderID, tx.Commit()

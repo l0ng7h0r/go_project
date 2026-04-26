@@ -138,6 +138,11 @@ func (r *ProductRepository) UpdateProduct(id string, product *domain.Product) er
 	return nil
 }
 
+func (r *ProductRepository) RestoreStock(productID string, quantity int) error {
+	_, err := r.db.Exec(`UPDATE products SET stock = stock + $1 WHERE id = $2`, quantity, productID)
+	return err
+}
+
 func (r *ProductRepository) GetProductsByCategoryID(categoryID string) ([]domain.Product, error) {
 	rows, err := r.db.Query(
 		`SELECT p.id, p.seller_id, p.name, p.description, p.price, p.stock, p.status, p.created_at, p.updated_at

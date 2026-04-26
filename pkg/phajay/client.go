@@ -34,7 +34,7 @@ type PaymentLinkRequest struct {
 // PaymentLinkResponse is the response from creating a payment link
 type PaymentLinkResponse struct {
 	Success    bool   `json:"success"`
-	PaymentURL string `json:"paymentUrl"`
+	PaymentURL string `json:"redirectURL"`
 	Message    string `json:"message"`
 }
 

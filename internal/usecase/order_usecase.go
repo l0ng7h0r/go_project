@@ -92,5 +92,16 @@ func (u *OrderUsecase) UpdateOrderStatus(id string, status string) error {
 	if !validStatuses[status] {
 		return errors.New("invalid status")
 	}
+
+	// If cancelled, restore stock
+	if status == "cancelled" {
+		order, err := u.orderRepo.GetOrderByID(id)
+		if err == nil && order.Status != "cancelled" {
+			for _, item := range order.OrderItems {
+				_ = u.productRepo.RestoreStock(item.ProductID, item.Quantity)
+			}
+		}
+	}
+
 	return u.orderRepo.UpdateOrderStatus(id, status)
 }
