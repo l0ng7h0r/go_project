@@ -12,8 +12,29 @@ import (
 	"github.com/l0ng7h0r/golang/pkg/config"
 	"github.com/l0ng7h0r/golang/pkg/database"
 	"github.com/l0ng7h0r/golang/pkg/phajay"
+	
+	"github.com/gofiber/contrib/v3/swaggo"
+	_ "github.com/l0ng7h0r/golang/docs" // Import generated docs
 )
 
+// @title           Golang E-Commerce API
+// @version         1.0
+// @description     This is a sample e-commerce server.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.Load()
 
@@ -59,6 +80,10 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(authUsecase)
 
 	app := fiber.New()
+	
+	// Mount the Swagger UI
+	app.Get("/swagger/*", swaggo.HandlerDefault)
+
 	api := app.Group("/api")
 
 	// ── Public routes ─────────────────────────────────────────────────────────

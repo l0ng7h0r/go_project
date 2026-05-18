@@ -1,0 +1,1563 @@
+basePath: /api
+definitions:
+  domain.Seller:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      store_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  handler.CartItemRequest:
+    properties:
+      product_id:
+        example: prod-12345
+        type: string
+      quantity:
+        example: 2
+        type: integer
+    type: object
+  handler.CategoryRequest:
+    properties:
+      name:
+        example: Electronics
+        type: string
+    type: object
+  handler.ConfirmPaymentRequest:
+    properties:
+      transaction_id:
+        example: txn-987654
+        type: string
+    type: object
+  handler.CreateOrderRequest:
+    properties:
+      district:
+        example: Chatuchak
+        type: string
+      logistic:
+        example: Kerry Express
+        type: string
+      logistic_branch:
+        example: Branch 001
+        type: string
+      phone:
+        example: "0812345678"
+        type: string
+      province:
+        example: Bangkok
+        type: string
+      receiver_name:
+        example: John Doe
+        type: string
+    type: object
+  handler.CreatePaymentRequest:
+    properties:
+      amount:
+        example: 1500.5
+        type: number
+      order_id:
+        example: ord-123456
+        type: string
+    type: object
+  handler.CreateProductRequest:
+    properties:
+      category_ids:
+        example:
+        - cat-1
+        - cat-2
+        items:
+          type: string
+        type: array
+      description:
+        example: High precision RGB gaming mouse
+        type: string
+      image_urls:
+        example:
+        - http://example.com/img1.png
+        - http://example.com/img2.png
+        items:
+          type: string
+        type: array
+      name:
+        example: Gaming Mouse
+        type: string
+      price:
+        example: 1250
+        type: number
+      status:
+        example: active
+        type: string
+      stock:
+        example: 50
+        type: integer
+    type: object
+  handler.CreateSellerRequest:
+    properties:
+      description:
+        example: We sell the coolest gadgets around.
+        type: string
+      email:
+        example: seller@example.com
+        type: string
+      password:
+        example: seller123
+        type: string
+      roles:
+        example:
+        - seller
+        items:
+          type: string
+        type: array
+      store_name:
+        example: Cool Gadgets Store
+        type: string
+    type: object
+  handler.CreateShipmentRequest:
+    properties:
+      order_id:
+        example: ord-123456
+        type: string
+      provider:
+        example: Kerry Express
+        type: string
+      tracking_number:
+        example: KER123456789TH
+        type: string
+    type: object
+  handler.CreateUserRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: securePassword123
+        type: string
+      roles:
+        example:
+        - admin
+        - user
+        items:
+          type: string
+        type: array
+    type: object
+  handler.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  handler.RefreshRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  handler.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  handler.UpdateOrderStatusRequest:
+    properties:
+      status:
+        example: shipped
+        type: string
+    type: object
+  handler.UpdateProductRequest:
+    properties:
+      description:
+        example: Upgraded version
+        type: string
+      name:
+        example: Gaming Mouse V2
+        type: string
+      price:
+        example: 1500
+        type: number
+      status:
+        example: active
+        type: string
+      stock:
+        example: 30
+        type: integer
+    type: object
+  handler.UpdateShipmentStatusRequest:
+    properties:
+      status:
+        example: in_transit
+        type: string
+    type: object
+  handler.UpdateShipmentTrackingRequest:
+    properties:
+      provider:
+        example: Kerry Express
+        type: string
+      tracking_number:
+        example: KER987654321TH
+        type: string
+    type: object
+  phajay.WebhookPayload:
+    properties:
+      amount:
+        type: number
+      orderNo:
+        type: string
+      status:
+        description: success, failed, cancelled
+        type: string
+      transactionId:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample e-commerce server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Golang E-Commerce API
+  version: "1.0"
+paths:
+  /admin/categories/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product category
+      parameters:
+      - description: Category details (name)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new category (Admin)
+      tags:
+      - admin
+      - categories
+  /admin/categories/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a product category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a category (Admin)
+      tags:
+      - admin
+      - categories
+  /admin/categories/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update the name of an existing category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Category details (name)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a category (Admin)
+      tags:
+      - admin
+      - categories
+  /admin/orders:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all orders in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all orders (Admin)
+      tags:
+      - admin
+      - orders
+  /admin/orders/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of an existing order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update (status)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update order status (Admin)
+      tags:
+      - admin
+      - orders
+  /admin/payments/{id}/confirm:
+    patch:
+      consumes:
+      - application/json
+      description: Allows admin to manually confirm a payment
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Transaction details (transaction_id)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ConfirmPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm payment manually (Admin)
+      tags:
+      - admin
+      - payments
+  /admin/sellers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all sellers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all sellers (Admin)
+      tags:
+      - admin
+      - sellers
+    post:
+      consumes:
+      - application/json
+      description: Create a new seller account and store
+      parameters:
+      - description: Seller details (email, password, roles, store_name, description)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateSellerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new seller (Admin)
+      tags:
+      - admin
+      - sellers
+  /admin/sellers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a seller account
+      parameters:
+      - description: Seller ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a seller (Admin)
+      tags:
+      - admin
+      - sellers
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific seller
+      parameters:
+      - description: Seller ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get seller by ID (Admin)
+      tags:
+      - admin
+      - sellers
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing seller
+      parameters:
+      - description: Seller ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated seller details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Seller'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a seller (Admin)
+      tags:
+      - admin
+      - sellers
+  /admin/shipments/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a shipment
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update (status)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateShipmentStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update shipment status (Admin)
+      tags:
+      - admin
+      - shipments
+  /admin/shipments/{id}/tracking:
+    patch:
+      consumes:
+      - application/json
+      description: Update the tracking number and provider for a shipment
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tracking info (provider, tracking_number)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateShipmentTrackingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update shipment tracking (Admin)
+      tags:
+      - admin
+      - shipments
+  /admin/shipments/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a shipment for an order
+      parameters:
+      - description: Shipment details (order_id, provider, tracking_number)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateShipmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a shipment (Admin)
+      tags:
+      - admin
+      - shipments
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users (Admin)
+      tags:
+      - admin
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with specified roles
+      parameters:
+      - description: User details (email, password, roles)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new user (Admin)
+      tags:
+      - admin
+      - users
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user (Admin)
+      tags:
+      - admin
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user information by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (Admin)
+      tags:
+      - admin
+      - users
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all product categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all categories
+      tags:
+      - categories
+  /categories/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a product category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get category by ID
+      tags:
+      - categories
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and receive access and refresh tokens
+      parameters:
+      - description: Login details (email, password)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all products
+      tags:
+      - products
+  /products/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific product
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get product by ID
+      tags:
+      - products
+  /products/category/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all products in a specific category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get products by category
+      tags:
+      - products
+  /products/seller/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all products listed by a specific seller
+      parameters:
+      - description: Seller ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get products by seller
+      tags:
+      - products
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get a new access token using a refresh token
+      parameters:
+      - description: Refresh token (refresh_token)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Registration details (email, password)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /seller/products/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product listed by the current seller
+      parameters:
+      - description: Product details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new product (Seller)
+      tags:
+      - products
+      - seller
+  /seller/products/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a product listed by the current seller
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a product (Seller)
+      tags:
+      - products
+      - seller
+  /seller/products/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update details of a product listed by the current seller
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated product details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a product (Seller)
+      tags:
+      - products
+      - seller
+  /user/cart:
+    delete:
+      consumes:
+      - application/json
+      description: Remove all items from the user's shopping cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Clear cart
+      tags:
+      - cart
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current user's shopping cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user cart
+      tags:
+      - cart
+  /user/cart/items:
+    post:
+      consumes:
+      - application/json
+      description: Add a product to the user's shopping cart
+      parameters:
+      - description: Cart Item (product_id, quantity)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Add item to cart
+      tags:
+      - cart
+    put:
+      consumes:
+      - application/json
+      description: Update the quantity of a product in the user's shopping cart
+      parameters:
+      - description: Cart Item Update (product_id, quantity)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update cart item
+      tags:
+      - cart
+  /user/cart/items/{productId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a product from the user's shopping cart by product ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove item from cart
+      tags:
+      - cart
+  /user/orders:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all orders placed by the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user's orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Create an order from the user's current shopping cart
+      parameters:
+      - description: Order details (receiver_name, phone, province, district, logistic,
+          logistic_branch)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new order
+      tags:
+      - orders
+  /user/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific order by its ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - orders
+  /user/payments:
+    post:
+      consumes:
+      - application/json
+      description: Create a Phajay payment link for an order
+      parameters:
+      - description: Payment details (order_id, amount)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a payment
+      tags:
+      - payments
+  /user/payments/order/{orderId}:
+    get:
+      consumes:
+      - application/json
+      description: Get payment info for a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get payment by order
+      tags:
+      - payments
+  /user/shipments/order/{orderId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve shipment information for a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get shipment by order
+      tags:
+      - shipments
+  /webhooks/phajay:
+    post:
+      consumes:
+      - application/json
+      description: Handle the Phajay webhook callback (Public)
+      parameters:
+      - description: Webhook payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/phajay.WebhookPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Phajay payment webhook
+      tags:
+      - payments
+      - webhooks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -13,6 +13,11 @@ func NewCartHandler(cartUsecase *usecase.CartUsecase) *CartHandler {
 	return &CartHandler{cartUsecase: cartUsecase}
 }
 
+type CartItemRequest struct {
+	ProductID string `json:"product_id" example:"prod-12345"`
+	Quantity  int    `json:"quantity" example:"2"`
+}
+
 func getUserIDFromLocals(c fiber.Ctx) (string, error) {
 	userIDLocals := c.Locals("user_id")
 	if userIDLocals == nil {
@@ -25,6 +30,17 @@ func getUserIDFromLocals(c fiber.Ctx) (string, error) {
 	return userID, nil
 }
 
+// GetCart godoc
+// @Summary      Get user cart
+// @Description  Retrieve the current user's shopping cart
+// @Tags         cart
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Failure      500 {object} map[string]interface{}
+// @Router       /user/cart [get]
+// @Security     BearerAuth
 func (h *CartHandler) GetCart(c fiber.Ctx) error {
 	userID, err := getUserIDFromLocals(c)
 	if err != nil {
@@ -37,16 +53,25 @@ func (h *CartHandler) GetCart(c fiber.Ctx) error {
 	return c.JSON(cart)
 }
 
+// AddItem godoc
+// @Summary      Add item to cart
+// @Description  Add a product to the user's shopping cart
+// @Tags         cart
+// @Accept       json
+// @Produce      json
+// @Param        request body CartItemRequest true "Cart Item (product_id, quantity)"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Router       /user/cart/items [post]
+// @Security     BearerAuth
 func (h *CartHandler) AddItem(c fiber.Ctx) error {
 	userID, err := getUserIDFromLocals(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
-	var req struct {
-		ProductID string `json:"product_id"`
-		Quantity  int    `json:"quantity"`
-	}
+	var req CartItemRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -57,16 +82,25 @@ func (h *CartHandler) AddItem(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Item added to cart"})
 }
 
+// UpdateItem godoc
+// @Summary      Update cart item
+// @Description  Update the quantity of a product in the user's shopping cart
+// @Tags         cart
+// @Accept       json
+// @Produce      json
+// @Param        request body CartItemRequest true "Cart Item Update (product_id, quantity)"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Router       /user/cart/items [put]
+// @Security     BearerAuth
 func (h *CartHandler) UpdateItem(c fiber.Ctx) error {
 	userID, err := getUserIDFromLocals(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
-	var req struct {
-		ProductID string `json:"product_id"`
-		Quantity  int    `json:"quantity"`
-	}
+	var req CartItemRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -77,6 +111,18 @@ func (h *CartHandler) UpdateItem(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Cart item updated"})
 }
 
+// RemoveItem godoc
+// @Summary      Remove item from cart
+// @Description  Remove a product from the user's shopping cart by product ID
+// @Tags         cart
+// @Accept       json
+// @Produce      json
+// @Param        productId path string true "Product ID"
+// @Success      200 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Failure      500 {object} map[string]interface{}
+// @Router       /user/cart/items/{productId} [delete]
+// @Security     BearerAuth
 func (h *CartHandler) RemoveItem(c fiber.Ctx) error {
 	userID, err := getUserIDFromLocals(c)
 	if err != nil {
@@ -89,6 +135,17 @@ func (h *CartHandler) RemoveItem(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Item removed from cart"})
 }
 
+// ClearCart godoc
+// @Summary      Clear cart
+// @Description  Remove all items from the user's shopping cart
+// @Tags         cart
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Failure      500 {object} map[string]interface{}
+// @Router       /user/cart [delete]
+// @Security     BearerAuth
 func (h *CartHandler) ClearCart(c fiber.Ctx) error {
 	userID, err := getUserIDFromLocals(c)
 	if err != nil {
