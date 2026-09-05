@@ -33,6 +33,15 @@ type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
+type UpdateUserRequest struct {
+	Email    string `json:"email" example:"user@example.com"`
+	Password string `json:"password" example:"secret123"`
+}
+
 // CreateUser godoc
 // @Summary      Create a new user (Admin)
 // @Description  Create a new user with specified roles
@@ -186,4 +195,57 @@ func (h *AuthHandler) Refresh(c fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"access_token": accessToken, "refresh_token": refreshToken})
+}
+
+// Logout godoc
+// @Summary      User logout
+// @Description  Invalidate the user's refresh token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body LogoutRequest true "Logout details (refresh_token)"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} map[string]interface{}
+// @Router       /logout [post]
+func (h *AuthHandler) Logout(c fiber.Ctx) error {
+	var req LogoutRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	err := h.authUsecase.Logout(req.RefreshToken)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Logout successful"})
+}
+
+// UpdateUser godoc
+// @Summary      Update user details
+// @Description  Update the email or password of a user
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body UpdateUserRequest true "User Update (email, password)"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} map[string]interface{}
+// @Failure      401 {object} map[string]interface{}
+// @Router       /admin/update-user [patch]
+// @Security     BearerAuth
+func (h *AuthHandler) UpdateUser(c fiber.Ctx) error {
+	userID := c.Locals("user_id").(string)
+	if userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var req UpdateUserRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	if err := h.authUsecase.UpdateUser(userID, req.Email, req.Password); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "User updated"})
 }

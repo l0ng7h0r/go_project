@@ -154,6 +154,12 @@ definitions:
         example: secret123
         type: string
     type: object
+  handler.LogoutRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
   handler.RefreshRequest:
     properties:
       refresh_token:
@@ -208,6 +214,15 @@ definitions:
         example: KER987654321TH
         type: string
     type: object
+  handler.UpdateUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
   phajay.WebhookPayload:
     properties:
       amount:
@@ -220,7 +235,7 @@ definitions:
       transactionId:
         type: string
     type: object
-host: localhost:8080
+host: localhost:3000
 info:
   contact:
     email: support@swagger.io
@@ -712,6 +727,41 @@ paths:
       tags:
       - admin
       - shipments
+  /admin/update-user:
+    patch:
+      consumes:
+      - application/json
+      description: Update the email or password of a user
+      parameters:
+      - description: User Update (email, password)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user details
+      tags:
+      - auth
   /admin/users:
     get:
       consumes:
@@ -903,6 +953,34 @@ paths:
             additionalProperties: true
             type: object
       summary: User login
+      tags:
+      - auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate the user's refresh token
+      parameters:
+      - description: Logout details (refresh_token)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User logout
       tags:
       - auth
   /products:

@@ -142,4 +142,29 @@ func (u *AuthUsecase) Refresh(token string) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
+func (u *AuthUsecase) Logout(token string) error {
+	return u.userRepo.DeleteRefreshToken(token)
+}
+
+func (u *AuthUsecase) UpdateUser(id, email, password string) error {
+	existingUser, err := u.userRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	if email != "" {
+		existingUser.Email = email
+	}
+
+	if password != "" {
+		hashed, err := security.HashPassword(password)
+		if err != nil {
+			return err
+		}
+		existingUser.Password = hashed
+	}
+
+	return u.userRepo.UpdateUser(existingUser)
+}	
+
 

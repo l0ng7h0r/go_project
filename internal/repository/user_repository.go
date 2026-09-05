@@ -218,3 +218,9 @@ func (r *UserRepository) DeleteRefreshToken(token string) error {
 	_, err := r.db.Exec("DELETE FROM refresh_tokens WHERE token=$1", token)
 	return err
 }
+
+// UpdateUser
+func (r *UserRepository) UpdateUser(user *domain.User) error {
+	_, err := r.db.Exec(`UPDATE users SET email=$2, password=$3 WHERE id=$1`, user.ID, user.Email, user.Password)
+	return err
+}

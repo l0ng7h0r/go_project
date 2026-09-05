@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 
 	"github.com/l0ng7h0r/golang/internal/handler"
 	"github.com/l0ng7h0r/golang/internal/middleware"
@@ -12,7 +13,7 @@ import (
 	"github.com/l0ng7h0r/golang/pkg/config"
 	"github.com/l0ng7h0r/golang/pkg/database"
 	"github.com/l0ng7h0r/golang/pkg/phajay"
-	
+
 	"github.com/gofiber/contrib/v3/swaggo"
 	_ "github.com/l0ng7h0r/golang/docs" // Import generated docs
 )
@@ -29,7 +30,7 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8080
+// @host      localhost:3000
 // @BasePath  /api
 
 // @securityDefinitions.apikey BearerAuth
@@ -56,6 +57,7 @@ func main() {
 	paymentRepo  := repository.NewPaymentRepository(db)
 	shipmentRepo := repository.NewShipmentRepository(db)
 
+
 	// --- Usecases ---
 	authUsecase     := usecase.NewAuthUsecase(userRepo)
 	sellerUsecase   := usecase.NewSellerUsecase(sellerRepo, userRepo)
@@ -80,6 +82,7 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(authUsecase)
 
 	app := fiber.New()
+	app.Use(cors.New())
 	
 	// Mount the Swagger UI
 	app.Get("/swagger/*", swaggo.HandlerDefault)
@@ -90,6 +93,7 @@ func main() {
 	api.Post("/register", authHandler.Register)
 	api.Post("/login", authHandler.Login)
 	api.Post("/refresh", authHandler.Refresh)
+	api.Post("/logout", authHandler.Logout)
 
 	// Public product/category browsing
 	api.Get("/products", productHandler.GetAllProducts)
@@ -139,10 +143,17 @@ func main() {
 	admin.Use(authMiddleware.Auth)
 	admin.Use(authMiddleware.RequireRole("admin"))
 
+	// Auth
+	admin.Post("/register", authHandler.Register)
+	admin.Post("/login", authHandler.Login)
+	admin.Post("/refresh", authHandler.Refresh)
+	admin.Post("/logout", authHandler.Logout)
+
 	// User management
 	admin.Post("/users", authHandler.CreateUser)
 	admin.Get("/users", authHandler.GetAllUsers)
 	admin.Get("/users/:id", authHandler.GetUserByID)
+	admin.Patch("/update-user", authHandler.UpdateUser)
 	admin.Delete("/users/:id", authHandler.DeleteUser)
 
 	// Seller management
@@ -169,5 +180,10 @@ func main() {
 	admin.Patch("/shipments/:id/status", shipmentHandler.UpdateStatus)
 	admin.Patch("/shipments/:id/tracking", shipmentHandler.UpdateTracking)
 
-	app.Listen(":" + cfg.AppPort)
+	log.Println("Server running at http://localhost:3000")
+	log.Println("Swagger docs at http://localhost:3000/swagger/index.html")
+
+	if err := app.Listen(":" + cfg.AppPort); err != nil {
+    log.Fatal(err)
+	}
 }
