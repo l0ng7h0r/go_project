@@ -767,7 +767,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "users"
                 ],
                 "summary": "Update user details",
                 "parameters": [
@@ -1959,7 +1959,7 @@ const docTemplate = `{
                 "summary": "Create a payment",
                 "parameters": [
                     {
-                        "description": "Payment details (order_id, amount)",
+                        "description": "Payment details (order_id)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -2211,10 +2211,6 @@ const docTemplate = `{
         "handler.CreatePaymentRequest": {
             "type": "object",
             "properties": {
-                "amount": {
-                    "type": "number",
-                    "example": 1500.5
-                },
                 "order_id": {
                     "type": "string",
                     "example": "ord-123456"

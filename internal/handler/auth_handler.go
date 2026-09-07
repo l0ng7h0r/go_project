@@ -224,7 +224,7 @@ func (h *AuthHandler) Logout(c fiber.Ctx) error {
 // UpdateUser godoc
 // @Summary      Update user details
 // @Description  Update the email or password of a user
-// @Tags         auth
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        request body UpdateUserRequest true "User Update (email, password)"

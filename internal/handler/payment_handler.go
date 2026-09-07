@@ -15,8 +15,7 @@ func NewPaymentHandler(paymentUsecase *usecase.PaymentUsecase) *PaymentHandler {
 }
 
 type CreatePaymentRequest struct {
-	OrderID string  `json:"order_id" example:"ord-123456"`
-	Amount  float64 `json:"amount" example:"1500.50"`
+	OrderID string `json:"order_id" example:"ord-123456"`
 }
 
 type ConfirmPaymentRequest struct {
@@ -29,7 +28,7 @@ type ConfirmPaymentRequest struct {
 // @Tags         payments
 // @Accept       json
 // @Produce      json
-// @Param        request body CreatePaymentRequest true "Payment details (order_id, amount)"
+// @Param        request body CreatePaymentRequest true "Payment details (order_id)"
 // @Success      201 {object} map[string]interface{}
 // @Failure      400 {object} map[string]interface{}
 // @Router       /user/payments [post]
@@ -39,11 +38,11 @@ func (h *PaymentHandler) CreatePayment(c fiber.Ctx) error {
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	if req.OrderID == "" || req.Amount <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "order_id and amount are required"})
+	if req.OrderID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "order_id is required"})
 	}
 
-	paymentID, paymentURL, err := h.paymentUsecase.CreatePayment(req.OrderID, req.Amount)
+	paymentID, paymentURL, err := h.paymentUsecase.CreatePayment(req.OrderID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}

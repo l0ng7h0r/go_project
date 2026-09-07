@@ -19,8 +19,7 @@ func (r *PaymentRepository) CreatePayment(payment *domain.Payment) (string, erro
 	err := r.db.QueryRow(
 		`INSERT INTO payments(order_id, method, status, amount, transaction_id, payment_url, paid_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		payment.OrderID, payment.Method, payment.Status, payment.Amount,
-		payment.TransactionID, payment.PaymentURL, payment.PaidAt,
+		payment.OrderID, payment.Method, payment.Status, payment.Amount, payment.TransactionID, payment.PaymentURL, payment.PaidAt,
 	).Scan(&id)
 	return id, err
 }

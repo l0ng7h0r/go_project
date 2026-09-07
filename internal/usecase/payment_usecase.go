@@ -23,7 +23,7 @@ func NewPaymentUsecase(paymentRepo *repository.PaymentRepository, orderRepo *rep
 }
 
 // CreatePayment creates a Phajay payment link and saves it to the DB
-func (u *PaymentUsecase) CreatePayment(orderID string, amount float64) (string, string, error) {
+func (u *PaymentUsecase) CreatePayment(orderID string) (string, string, error) {
 	// Verify order exists
 	order, err := u.orderRepo.GetOrderByID(orderID)
 	if err != nil {
@@ -32,8 +32,8 @@ func (u *PaymentUsecase) CreatePayment(orderID string, amount float64) (string, 
 
 	description := fmt.Sprintf("Order %s - %s", order.ID[:8], order.ReceiverName)
 
-	// Call Phajay API to create payment link
-	phajayResp, err := u.phajayClient.CreatePaymentLink(amount, description, orderID)
+	// Call Phajay API to create payment link using order.TotalPrice
+	phajayResp, err := u.phajayClient.CreatePaymentLink(order.TotalPrice, description, orderID)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create phajay payment: %w", err)
 	}
@@ -42,7 +42,7 @@ func (u *PaymentUsecase) CreatePayment(orderID string, amount float64) (string, 
 		OrderID:    orderID,
 		Method:     "phajay",
 		Status:     "pending",
-		Amount:     amount,
+		Amount:     order.TotalPrice,
 		PaymentURL: phajayResp.PaymentURL,
 	}
 
