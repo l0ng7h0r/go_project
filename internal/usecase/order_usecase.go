@@ -72,8 +72,26 @@ func (u *OrderUsecase) CreateOrderFromCart(
 	return orderID, nil
 }
 
-func (u *OrderUsecase) GetOrderByID(id string) (*domain.Order, error) {
-	return u.orderRepo.GetOrderByID(id)
+func (u *OrderUsecase) GetOrderByID(id, currentUserID string, userRoles []interface{}) (*domain.Order, error) {
+	order, err := u.orderRepo.GetOrderByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if order.UserID != currentUserID && !hasRole(userRoles, "admin") {
+		return nil, errors.New("forbidden: access denied to this order")
+	}
+
+	return order, nil
+}
+
+func hasRole(roles []interface{}, target string) bool {
+	for _, r := range roles {
+		if s, ok := r.(string); ok && s == target {
+			return true
+		}
+	}
+	return false
 }
 
 func (u *OrderUsecase) GetMyOrders(userID string) ([]domain.Order, error) {

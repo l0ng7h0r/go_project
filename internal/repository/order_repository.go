@@ -45,7 +45,7 @@ func (r *OrderRepository) CreateOrder(order *domain.Order) (string, error) {
 		
 		// Deduct stock
 		_, err = tx.Exec(
-			`UPDATE products SET stock = stock - $1 WHERE id = $2`,
+			`UPDATE products SET stock = stock - $1 WHERE id = AND stock >= $1`,
 			item.Quantity, item.ProductID,
 		)
 		if err != nil {

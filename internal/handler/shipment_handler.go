@@ -65,8 +65,24 @@ func (h *ShipmentHandler) CreateShipment(c fiber.Ctx) error {
 // @Security     BearerAuth
 func (h *ShipmentHandler) GetShipmentByOrder(c fiber.Ctx) error {
 	orderID := c.Params("orderId")
-	shipment, err := h.shipmentUsecase.GetShipmentByOrderID(orderID)
+
+	userID, err := getUserIDFromLocals(c)
 	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var roles []interface{}
+	if r := c.Locals("roles"); r != nil {
+		if rs, ok := r.([]interface{}); ok {
+			roles = rs
+		}
+	}
+
+	shipment, err := h.shipmentUsecase.GetShipmentByOrderID(orderID, userID, roles)
+	if err != nil {
+		if err.Error() == "forbidden: access denied to this shipment" {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Shipment not found"})
 	}
 	return c.JSON(shipment)

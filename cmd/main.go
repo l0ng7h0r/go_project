@@ -66,7 +66,7 @@ func main() {
 	cartUsecase     := usecase.NewCartUsecase(cartRepo, productRepo)
 	orderUsecase    := usecase.NewOrderUsecase(orderRepo, cartRepo, productRepo)
 	paymentUsecase  := usecase.NewPaymentUsecase(paymentRepo, orderRepo, phajayClient)
-	shipmentUsecase := usecase.NewShipmentUsecase(shipmentRepo)
+	shipmentUsecase := usecase.NewShipmentUsecase(shipmentRepo, orderRepo)
 
 	// --- Handlers ---
 	authHandler     := handler.NewAuthHandler(authUsecase)

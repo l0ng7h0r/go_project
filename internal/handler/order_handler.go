@@ -106,8 +106,24 @@ func (h *OrderHandler) GetMyOrders(c fiber.Ctx) error {
 // @Security     BearerAuth
 func (h *OrderHandler) GetOrderByID(c fiber.Ctx) error {
 	id := c.Params("id")
-	order, err := h.orderUsecase.GetOrderByID(id)
+
+	userID, err := getUserIDFromLocals(c)
 	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var roles []interface{}
+	if r := c.Locals("roles"); r != nil {
+		if rs, ok := r.([]interface{}); ok {
+			roles = rs
+		}
+	}
+
+	order, err := h.orderUsecase.GetOrderByID(id, userID, roles)
+	if err != nil {
+		if err.Error() == "forbidden: access denied to this order" {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
 	return c.JSON(order)
